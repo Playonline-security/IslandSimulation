@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='UTF-8'>
+<title>Isla Simulación</title>
+<style>
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif, 'Segoe UI Emoji', 'Noto Color Emoji';
+  margin: 0;
+  padding: 0;
+  background-color: #f9f9f9;
+}
+.main-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  min-height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
+}
+.map-and-side-panel-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 24px;
+}
+.side-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 300px;
+}
+.map-panel-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+.grid-container {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 1px 8px rgba(0,0,0,0.04);
+  padding: 12px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(50, 26px);
+  gap: 1px;
+}
+.cell {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  background: rgba(243, 246, 248, 0.9);
+  border: 1px solid #e0e3e7;
+  border-radius: 3px;
+  transition: box-shadow 0.15s;
+  position: relative;
+}
+.cell:hover {
+  box-shadow: 0 0 4px #b0b0b0;
+  z-index: 2;
+}
+.hunting-cell {
+  background: #ffeaea;
+  border-color: #ffb3b3;
+  animation: pulse 0.8s ease-out;
+}
+.eatingPlant {
+  background: #eaffea;
+  border-color: #b3ffb3;
+  animation: pop 0.6s ease;
+}
+.reproduction-cell {
+  background: #eaf4ff;
+  border-color: #b3e0ff;
+  animation: pop 0.6s ease;
+}
+.offspring-cell {
+  background: #fffbe6;
+  border-color: #ffe680;
+  animation: pop 0.6s ease;
+}
+.death-cell {
+  background: #f7f7f7;
+  border-style: dashed;
+  border-color: #cccccc;
+  animation: pop 0.6s ease;
+}
+.water-cell {
+  background: #e3f0ff;
+  border-color: #b3d8ff;
+}
+.cell[data-tooltip]:hover:after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 110%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #222;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 10;
+}
+.stats, .log-panel {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 8px rgba(0,0,0,0.04);
+  padding: 12px 18px;
+  font-size: 13px;
+}
+.stats {
+  min-width: 240px;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  font-size: 14px;
+}
+.log-panel {
+  min-width: 240px;
+}
+.log-content {
+  background: #f8f9fa;
+  border: 1px solid #e0e3e7;
+  border-radius: 8px;
+  padding: 8px;
+}
+.log-entry {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 4px;
+  margin-bottom: 4px;
+  font-size: 13px;
+  line-height: 1.4;
+  white-space: normal;
+  word-wrap: break-word;
+}
+.log-entry:last-child {
+  margin-bottom: 0;
+}
+.log-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.log-text {
+  color: #333;
+}
+.log-hunting {
+  background-color: #ffe6e6;
+}
+.log-eating {
+  background-color: #e6ffe6;
+}
+.log-reproduction {
+  background-color: #e6f7ff;
+}
+.log-offspring {
+  background-color: #fffbe6;
+}
+.log-death {
+  background-color: #f2f2f2;
+  color: #666;
+}
+.stats h3, .stats h4 {
+  margin: 0 0 12px 0;
+  color: #333;
+}
+.divider {
+  border: 0;
+  height: 1px;
+  background: #e0e0e0;
+  margin: 15px 0;
+}
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+.stat-row span:first-child {
+  color: #555;
+}
+.stat-row span:last-child {
+  font-weight: bold;
+  color: #000;
+}
+.event-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+.event-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  color: #555;
+}
+.event-list li span {
+  font-weight: bold;
+  color: #000;
+}
+@media (max-width: 900px) {
+  .map-and-side-panel-container {
+    flex-direction: column;
+    align-items: center;
+  }
+  .side-panel {
+    width: 100%;
+  }
+  .stats {
+    min-width: unset;
+    width: 100%;
+  }
+  .log-panel {
+    min-width: unset;
+    width: 100%;
+  }
+}
+@keyframes pop {
+  0% { transform: scale(0.9); opacity: 0.8; }
+  50% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); }
+}
+@keyframes pulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.4); }
+  100% { transform: scale(1.05); box-shadow: 0 0 0 8px rgba(255, 0, 0, 0); }
+}
+.species-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  font-size: 18px;
+  align-items: center;
+  margin-top: 12px;
+}
+.species-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: bold;
+  min-height: 32px;
+  color: #333;
+  transition: background-color 0.2s ease;
+}
+.species-item.status-red {
+  background-color: #ffcccc;
+  border: none;
+}
+.species-item.status-yellow {
+  background-color: #fff2cc;
+  border: none;
+}
+.species-item.status-green {
+  background-color: #ccffcc;
+  border: none;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const logContainer = document.getElementById('event-log-container');
+  if (logContainer) {
+    logContainer.innerHTML = `<div class='log-entry log-warning'><span class='log-icon'>🚨</span> <span class='log-text'>La población de Boa 🐍 es muy baja (3).</span></div><div class='log-entry log-warning'><span class='log-icon'>🚨</span> <span class='log-text'>La población de Duck 🦆 es muy baja (3).</span></div><div class='log-entry log-warning'><span class='log-icon'>🚨</span> <span class='log-text'>La población de Mouse 🐭 es muy baja (3).</span></div><div class='log-entry log-warning'><span class='log-icon'>🚨</span> <span class='log-text'>La población de Rabbit 🐇 es muy baja (3).</span></div><div class='log-entry log-hunting'><span class='log-icon'>⚔️</span> <span class='log-text'>🐺 Wolf mató a 🐐 Goat.</span></div><div class='log-entry log-hunting'><span class='log-icon'>⚔️</span> <span class='log-text'>🐺 Wolf mató a 🐗 Boar.</span></div><div class='log-entry log-reproduction'><span class='log-icon'>❤️</span> <span class='log-text'>Un Buffalo 🐃 y un Buffalo 🐃 se reprodujeron.</span></div><div class='log-entry log-reproduction'><span class='log-icon'>❤️</span> <span class='log-text'>Un Buffalo 🐃 y un Buffalo 🐃 se reprodujeron.</span></div><div class='log-entry log-eating'><span class='log-icon'>🌿</span> <span class='log-text'>Un Goat 🐐 se comió un(a) Vegetation 🌿.</span></div><div class='log-entry log-eating'><span class='log-icon'>🌿</span> <span class='log-text'>Un Goat 🐐 se comió un(a) Vegetation 🌿.</span></div><div class='log-entry log-eating'><span class='log-icon'>🌿</span> <span class='log-text'>Un Deer 🦌 se comió un(a) Vegetation 🌿.</span></div><div class='log-entry log-eating'><span class='log-icon'>🌿</span> <span class='log-text'>Un Horse 🐎 se comió un(a) Vegetation 🌿.</span></div><div class='log-entry log-eating'><span class='log-icon'>🌿</span> <span class='log-text'>Un Goat 🐐 se comió un(a) Vegetation 🌿.</span></div><div class='log-entry log-eating'><span class='log-icon'>🌿</span> <span class='log-text'>Un Sheep 🐑 se comió un(a) Vegetation 🌿.</span></div>`;
+  }
+  setTimeout(() => location.reload(), 3000);
+});
+</script>
+</head>
+<body>
+<h2 style='text-align: center;'>🌍 Mapa de la Isla</h2>
+<div class='main-container'>
+<div class='map-and-side-panel-container'>
+<div class='map-panel-container'>
+<div class='grid-container'>
+<div class='grid'>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🐑</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🦊</div>
+<div class='cell'>🍄</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🐇</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌱</div>
+<div class='cell'>🐃</div>
+<div class='cell reproduction-cell' data-tooltip='Reproducción'>🐃</div>
+<div class='cell reproduction-cell' data-tooltip='Reproducción'>🐃</div>
+<div class='cell'> </div>
+<div class='cell'>🐐</div>
+<div class='cell'>🐐</div>
+<div class='cell hunting-cell' data-tooltip='Caza'>🐐</div>
+<div class='cell hunting-cell' data-tooltip='Caza'>🐺</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌱</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🐎</div>
+<div class='cell'> </div>
+<div class='cell'>🦌</div>
+<div class='cell'> </div>
+<div class='cell'>🐎</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🍄</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🐗</div>
+<div class='cell'>🍄‍🟫</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell reproduction-cell' data-tooltip='Reproducción'>🐃</div>
+<div class='cell reproduction-cell' data-tooltip='Reproducción'>🐃</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🐐</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🐗</div>
+<div class='cell eatingPlant' data-tooltip='Comiendo planta'>🐐</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🐛</div>
+<div class='cell'>🦊</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🐍</div>
+<div class='cell'>🐑</div>
+<div class='cell'>🌳</div>
+<div class='cell'>🌳</div>
+<div class='cell'>🌳</div>
+<div class='cell'>🌿</div>
+<div class='cell'>🐐</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🍄</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell eatingPlant' data-tooltip='Comiendo planta'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🍄‍🟫</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🐑</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🦅</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🍄</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell eatingPlant' data-tooltip='Comiendo planta'>🐐</div>
+<div class='cell'>🦅</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'>🐗</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌳</div>
+<div class='cell'>🌳</div>
+<div class='cell'>🌳</div>
+<div class='cell'> </div>
+<div class='cell'>🐐</div>
+<div class='cell'>🐐</div>
+<div class='cell'>🦅</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌳</div>
+<div class='cell'>🌳</div>
+<div class='cell'>🌳</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'>🍄‍🟫</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🍄‍🟫</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell eatingPlant' data-tooltip='Comiendo planta'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell eatingPlant' data-tooltip='Comiendo planta'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌳</div>
+<div class='cell'>🌳</div>
+<div class='cell'>🌳</div>
+<div class='cell'>🌳</div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌳</div>
+<div class='cell'>🌳</div>
+<div class='cell'>🌳</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'>🌱</div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌱</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell eatingPlant' data-tooltip='Comiendo planta'>🦌</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell eatingPlant' data-tooltip='Comiendo planta'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🍄</div>
+<div class='cell'>🍄</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🐺</div>
+<div class='cell'> </div>
+<div class='cell'>🌳</div>
+<div class='cell'>🌳</div>
+<div class='cell'>🌳</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell death-cell' data-tooltip='Muerte'>☠️</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🐛</div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'>🦌</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'>🐇</div>
+<div class='cell'> </div>
+<div class='cell'>🐑</div>
+<div class='cell'> </div>
+<div class='cell'>🐗</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell eatingPlant' data-tooltip='Comiendo planta'>🐎</div>
+<div class='cell'>🍄</div>
+<div class='cell'> </div>
+<div class='cell'>🌴</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🪨</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🦊</div>
+<div class='cell'> </div>
+<div class='cell'>🍄‍🟫</div>
+<div class='cell'>🍄</div>
+<div class='cell'>🌿</div>
+<div class='cell'>🍄</div>
+<div class='cell'> </div>
+<div class='cell'>🐃</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🐍</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'>🐻</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🍄</div>
+<div class='cell'> </div>
+<div class='cell'>🍄‍🟫</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌱</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌴</div>
+<div class='cell'>🌴</div>
+<div class='cell'>🌴</div>
+<div class='cell'> </div>
+<div class='cell'>🪨</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🐎</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell death-cell' data-tooltip='Muerte'>☠️</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'>🍄</div>
+<div class='cell'>🐍</div>
+<div class='cell'>🌴</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🪨</div>
+<div class='cell'>🪨</div>
+<div class='cell'>🪨</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🍄‍🟫</div>
+<div class='cell'> </div>
+<div class='cell'>🌱</div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'>🍄‍🟫</div>
+<div class='cell death-cell' data-tooltip='Muerte'>☠️</div>
+<div class='cell'>🌱</div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🐐</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🍄</div>
+<div class='cell'>🦊</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🦌</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌲</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🐐</div>
+<div class='cell'>🦌</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🍄‍🟫</div>
+<div class='cell'>🦌</div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'>🍄</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell eatingPlant' data-tooltip='Comiendo planta'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🐑</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌲</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🍄</div>
+<div class='cell'> </div>
+<div class='cell'>🍄</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌱</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🐎</div>
+<div class='cell'>🐃</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'>🍄‍🟫</div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell eatingPlant' data-tooltip='Comiendo planta'>🐑</div>
+<div class='cell'>🍄</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🐎</div>
+<div class='cell'> </div>
+<div class='cell'>🦊</div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌲</div>
+<div class='cell'>🌲</div>
+<div class='cell'>🌲</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🐺</div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'>🍄‍🟫</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌱</div>
+<div class='cell'> </div>
+<div class='cell'>🐗</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🐻</div>
+<div class='cell'>🍄</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🍄</div>
+<div class='cell'>🦊</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🐃</div>
+<div class='cell'> </div>
+<div class='cell death-cell' data-tooltip='Muerte'>☠️</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🍄‍🟫</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🦆</div>
+<div class='cell'>🌲</div>
+<div class='cell'>🌲</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🍄</div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🍄‍🟫</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell eatingPlant' data-tooltip='Comiendo planta'>🐐</div>
+<div class='cell'>🍄</div>
+<div class='cell'> </div>
+<div class='cell hunting-cell' data-tooltip='Caza'>🐺</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🍄</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🐭</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🦊</div>
+<div class='cell'> </div>
+<div class='cell'>🌱</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🦌</div>
+<div class='cell'>🌲</div>
+<div class='cell'>🌲</div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🦆</div>
+<div class='cell'>🌱</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🍄</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell eatingPlant' data-tooltip='Comiendo planta'>🌿</div>
+<div class='cell hunting-cell' data-tooltip='Caza'>🐗</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🍄‍🟫</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell water-cell' data-tooltip='Agua'>💧</div>
+<div class='cell'>🌱</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🐺</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🐃</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🐭</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🍄</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🦆</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🍄</div>
+<div class='cell water-cell' data-tooltip='Agua'>💧</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🐛</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'>🌿</div>
+<div class='cell'>🌿</div>
+<div class='cell'>🍄‍🟫</div>
+<div class='cell'>🐗</div>
+<div class='cell'>🐭</div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'>🌴</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🪨</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'>🐺</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🐻</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🍄‍🟫</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell water-cell' data-tooltip='Agua'>💧</div>
+<div class='cell water-cell' data-tooltip='Agua'>💧</div>
+<div class='cell water-cell' data-tooltip='Agua'>💧</div>
+<div class='cell water-cell' data-tooltip='Agua'>💧</div>
+<div class='cell'>🦅</div>
+<div class='cell'>🐻</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌱</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'>🍄</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌴</div>
+<div class='cell'>🌴</div>
+<div class='cell'>🌴</div>
+<div class='cell'>🌴</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🪨</div>
+<div class='cell'>🪨</div>
+<div class='cell'>🪨</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌱</div>
+<div class='cell'> </div>
+<div class='cell'>🐇</div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'>🐛</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell water-cell' data-tooltip='Agua'>💧</div>
+<div class='cell water-cell' data-tooltip='Agua'>💧</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌴</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🪨</div>
+<div class='cell'>🪨</div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🐗</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌱</div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'>🌱</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🪨</div>
+<div class='cell'>🪨</div>
+<div class='cell'>🪨</div>
+<div class='cell'>🪨</div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell water-cell' data-tooltip='Agua'>💧</div>
+<div class='cell water-cell' data-tooltip='Agua'>💧</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'>🍄</div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🍄‍🟫</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🐎</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'>🍄</div>
+<div class='cell'>🐎</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🍄</div>
+<div class='cell'>🪨</div>
+<div class='cell'>🪨</div>
+<div class='cell'>🪨</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell water-cell' data-tooltip='Agua'>💧</div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'> </div>
+<div class='cell'>🌿</div>
+<div class='cell'> </div>
+</div></div>
+<div class='species-row'>
+<div class='species-item status-yellow'>🐻 4</div>
+<div class='species-item status-red'>🐍 3</div>
+<div class='species-item status-green'>🐗 8</div>
+<div class='species-item status-green'>🐃 9</div>
+<div class='species-item status-yellow'>🐛 4</div>
+<div class='species-item status-green'>🦌 7</div>
+<div class='species-item status-red'>🦆 3</div>
+<div class='species-item status-yellow'>🦅 4</div>
+<div class='species-item status-green'>🦊 7</div>
+<div class='species-item status-green'>🐐 12</div>
+<div class='species-item status-green'>🐎 8</div>
+<div class='species-item status-red'>🐭 3</div>
+<div class='species-item status-red'>🐇 3</div>
+<div class='species-item status-yellow'>🐑 6</div>
+<div class='species-item status-yellow'>🐺 6</div>
+</div>
+</div>
+<div class='side-panel'>
+<div class='stats'>
+<h3>📊 Estadísticas</h3>
+<div class='stat-row'><span>📅 Ciclo:</span><span>8</span></div>
+<div class='stat-row'><span>👥 Población Total:</span><span>87</span></div>
+<div class='stat-row'><span>🗺️ Ocupación del mapa:</span><span>28,1%</span></div>
+<hr class='divider'>
+<h4>Eventos del ciclo</h4>
+<ul class='event-list'>
+<li>❤️ Reproducciones: <span>2</span></li>
+<li>💀 Animales muertos: <span>4</span></li>
+<li>⚔️ Acciones de Caza: <span>2</span></li>
+<li>🌿 Plantas consumidas: <span>6</span></li>
+</ul>
+</div>
+<div class='log-panel'>
+<div class='log-content' id='event-log-container'></div>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>
