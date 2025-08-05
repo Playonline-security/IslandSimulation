@@ -19,21 +19,6 @@
 
 ---
 
-## 🎨 Colores y eventos en la simulación
-
-Cada evento dentro del ecosistema se visualiza con estilos y colores distintos para facilitar la interpretación:
-
-| Evento             | Color / Estilo Visual | Descripción                                   |
-|--------------------|------------------------|-----------------------------------------------|
-| 🟢 Nacimiento       | Verde brillante         | Se genera un nuevo organismo                  |
-| 🔴 Muerte           | Rojo fuerte             | Un organismo muere (por hambre, edad, caza...)|
-| 🟣 Reproducción     | Morado                  | Dos organismos se reproducen                  |
-| 🟡 Caza             | Amarillo                | Un animal caza a otro                         |
-| 🟤 Alimentación     | Marrón                  | Un animal come una planta                     |
-| ⚫ Extinción        | Gris oscuro             | Una especie desaparece completamente          |
-
----
-
 ## 📋 Requisitos previos
 
 Antes de compilar y ejecutar el proyecto, asegúrate de tener:
@@ -68,21 +53,7 @@ Antes de compilar y ejecutar el proyecto, asegúrate de tener:
 
 ## 📸 Ejemplo de visualización
 
-![Captura de pantalla de la simulación](docs/screenshot.png)
-
-> Puedes tomar una captura real de tu simulación y colocarla en la carpeta `docs/`.
-
----
-
-## 🧠 Estructura del código
-
-El proyecto se organiza en paquetes para mantener la claridad y modularidad:
-
-- **`entities`**: Modela organismos de la isla (animales y plantas).
-- **`map`**: Representa el mapa de la isla y sus ubicaciones (`IslandMap`, `Location`).
-- **`threads`**: Implementa los eventos concurrentes (`HuntingEvent`, `ReproductionEvent`, `EatingPlantEvent`).
-- **`render`**: Genera visualmente la isla en HTML (`IslandWebRenderer`).
-- **`Main.java`**: Punto de inicio de la simulación.
+<img width="1744" height="862" alt="Captura de pantalla 2025-08-04 182058" src="https://github.com/user-attachments/assets/9fbb093a-6831-4649-96cb-63294d3e3ced" />
 
 ---
 
@@ -121,7 +92,7 @@ Este proyecto se seguirá optimizando con el objetivo de:
 - Explorar nuevas técnicas de desarrollo con Java.
 - Aprender sobre concurrencia, estructuras de datos, visualización y buenas prácticas de arquitectura.
 
-Cada mejora representa un paso más en el camino de aprendizaje hacia el desarrollo profesional en Java y la ciberseguridad.
+Cada mejora representa un paso más en el camino de aprendizaje hacia el desarrollo profesional en Java.
 
 ---
 
@@ -132,4 +103,4 @@ Desarrollado por:
 **Jonathan Uzcátegui González**  
 Estudiante de Ingeniería de Software  
 📚 Corporación Universitaria Iberoamericana  
-🔐 Futuro ethical hacker y desarrollador Java  
+🔐 Futuro ethical hacker y desarrollador Java
